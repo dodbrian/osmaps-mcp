@@ -61,7 +61,7 @@ async function geocode(address: string): Promise<Coordinates | ErrorResult> {
 
     const res = await fetch(url.toString(), {
       signal: controller.signal,
-      headers: { 'User-Agent': 'gmaps-mcp/1.0' }
+      headers: { 'User-Agent': 'osmaps-mcp/1.0' }
     });
 
     if (!res.ok) {
@@ -109,7 +109,7 @@ async function fetchRouteDistance(origin: Coordinates, destination: Coordinates)
 
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'gmaps-mcp/1.0' }
+      headers: { 'User-Agent': 'osmaps-mcp/1.0' }
     });
 
     if (!res.ok) {
