@@ -7,10 +7,11 @@ npm install              # Install dependencies
 npm run build            # Build TypeScript to dist/
 npm run lint             # Run ESLint on src/
 npm run lint:fix         # Run ESLint with auto-fix
+npm test                 # Run all tests with Vitest
+npm run test:watch       # Run tests in watch mode
+vitest run -t "test name"  # Run a single test by name pattern
 npm run start            # Run the MCP server
 ```
-
-**Note:** No test framework is configured. If tests are needed, run `npm run lint && npm run build` to verify code quality.
 
 ## Project Architecture
 
@@ -19,6 +20,8 @@ This is an MCP (Model Context Protocol) server that provides route distance calc
 - **Nominatim** - Free geocoding service (no API key)
 
 Entry point: `src/index.ts`
+Services: `src/services.ts` (geocoding, routing, coordinate parsing)
+Tests: `tests/test.spec.ts`
 
 ## Code Style Guidelines
 
@@ -28,6 +31,9 @@ Entry point: `src/index.ts`
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+
+// Use .js extension for local ES module imports
+import { resolveLocation, fetchRouteDistance } from './services.js';
 
 // Use type-only imports where appropriate (enforced by ESLint)
 import type { SomeType } from 'module';
@@ -135,10 +141,21 @@ server.tool(
 );
 ```
 
+### Test Pattern (Vitest)
+```typescript
+import { describe, it, expect, beforeAll } from 'vitest';
+
+describe('functionName', () => {
+  it('does something specific', () => {
+    expect(actual).toEqual(expected);
+  });
+});
+```
+
 ### File Organization
-- Single file: `src/index.ts` contains all code
-- If expanding: separate concerns into `src/services/`, `src/tools/`, `src/types/`
-- Use `.js` extension in imports for ES modules: `import { x } from './module.js'`
+- `src/index.ts` - MCP server setup and tool definitions
+- `src/services.ts` - Business logic (geocoding, routing, utilities)
+- `tests/test.spec.ts` - Test file
 
 ### External API Calls
 - Always include `User-Agent` header
@@ -166,4 +183,4 @@ function process(data: unknown) {
 ## Before Committing
 1. Run `npm run lint` - fix all errors
 2. Run `npm run build` - must compile without errors
-3. Test with MCP client if possible
+3. Run `npm test` - all tests must pass
