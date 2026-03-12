@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
@@ -40,13 +41,23 @@ type RouteResult = SuccessResult | ErrorResult;
 
 const COORD_PATTERN = /^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/;
 
+function isValidCoordinates(coords: Coordinates): boolean {
+  return coords.lat >= -90 && coords.lat <= 90 &&
+         coords.lon >= -180 && coords.lon <= 180;
+}
+
 function parseCoordinates(input: string): Coordinates | null {
   const match = input.trim().match(COORD_PATTERN);
   if (!match || !match[1] || !match[2]) return null;
-  return {
+  const coords = {
     lat: parseFloat(match[1]),
     lon: parseFloat(match[2])
   };
+  return isValidCoordinates(coords) ? coords : null;
+}
+
+function isErrorResult(result: unknown): result is ErrorResult {
+  return typeof result === 'object' && result !== null && 'ok' in result && (result as { ok: unknown }).ok === false;
 }
 
 async function geocode(address: string): Promise<Coordinates | ErrorResult> {
@@ -162,24 +173,25 @@ server.tool(
     destination: z.string().min(1, 'Destination cannot be empty').describe('Ending location - address or lat,lng coordinates')
   },
   async ({ origin, destination }) => {
-    const originResult = await resolveLocation(origin);
+    const [originResult, destResult] = await Promise.all([
+      resolveLocation(origin),
+      resolveLocation(destination)
+    ]);
 
-    if ('ok' in originResult && !originResult.ok) {
+    if (isErrorResult(originResult)) {
+      process.stderr.write(`Origin error: ${originResult.error}\n`);
       return { content: [{ type: 'text', text: originResult.error }] };
     }
 
-    const destResult = await resolveLocation(destination);
-
-    if ('ok' in destResult && !destResult.ok) {
+    if (isErrorResult(destResult)) {
+      process.stderr.write(`Destination error: ${destResult.error}\n`);
       return { content: [{ type: 'text', text: destResult.error }] };
     }
 
-    const originCoords = originResult as Coordinates;
-    const destCoords = destResult as Coordinates;
-
-    const result = await fetchRouteDistance(originCoords, destCoords);
+    const result = await fetchRouteDistance(originResult, destResult);
 
     if (!result.ok) {
+      process.stderr.write(`Routing error: ${result.error}\n`);
       return { content: [{ type: 'text', text: result.error }] };
     }
 
