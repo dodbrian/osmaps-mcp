@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "osmaps-mcp": "dist/index.js"
+  },
   "scripts": {
+    "setup": "npm run build && npm link",
     "build": "tsc",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
