@@ -109,6 +109,26 @@ Add to your `opencode.json` config file:
 }
 ```
 
+### Gemini CLI
+
+Add via CLI:
+
+```bash
+gemini mcp add osmaps osmaps-mcp -t stdio
+```
+
+Or add to your Gemini CLI configuration file:
+
+```json
+{
+  "mcpServers": {
+    "osmaps": {
+      "command": "osmaps-mcp"
+    }
+  }
+}
+```
+
 ## Tools
 
 ### get-route-distance
